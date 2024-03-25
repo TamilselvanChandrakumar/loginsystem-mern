@@ -27,6 +27,23 @@ export async function resetPasswordValidation(values) {
   return errors;
 }
 
+// validdate register page
+
+export async function registerValidation(values) {
+  const errors = userNameVerify({}, values);
+  userpasswordVerify(errors, values);
+  useremailVerify(errors, values);
+  return errors;
+}
+
+// validate profile page
+
+export async function profileValidate(values) {
+  const errors = useremailVerify({}, values);
+
+  return errors;
+}
+
 // validate username
 
 function userNameVerify(error = {}, values) {
@@ -48,6 +65,16 @@ function userpasswordVerify(error = {}, values) {
     error.password = toast.error("Invalid Password...!");
   } else if (values.password.length < 20) {
     error.password = toast.error("more character needs!");
+  }
+  return error;
+}
+
+// email verify
+function useremailVerify(error = {}, values) {
+  if (!values.email) {
+    error.email = toast.error("email Required...!");
+  } else if (values.email.includes(" ")) {
+    error.eamil = toast.error("email Password...!");
   }
   return error;
 }
