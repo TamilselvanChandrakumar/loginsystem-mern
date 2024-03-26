@@ -1,5 +1,6 @@
 const contorller = require("../controller/appController.js");
 const router = require("express").Router();
+const { Auth, localVariables } = require("../middleware/auth.js");
 
 // post methods
 router.route("/register").post(contorller.register); //register user
@@ -9,12 +10,16 @@ router.route("/login").post(contorller.verfiedUser, contorller.login); //login a
 
 // get methods
 router.route("/user/:username").get(contorller.getUser); //user with username
-router.route("generateOtp").get(contorller.generateOtp); //generate random otp
+router
+  .route("/generateOtp")
+  .get(contorller.verfiedUser, localVariables, contorller.generateOtp); //generate random otp
 router.route("/verifyOtp").get(contorller.verifyOtp); //verify generated otp
 router.route("/createResetSession").get(contorller.createResetSession); //reset all variables
 
 // put methods
-router.route("/updateUser").put(contorller.updateUser); //update the user profle
-router.route("/resetPassword").put(contorller.resetPassword); //use to reset password
+router.route("/updateUser").put(Auth, contorller.updateUser); //update the user profle
+router
+  .route("/resetPassword")
+  .put(contorller.verfiedUser, contorller.resetPassword); //use to reset password
 
 module.exports = router;

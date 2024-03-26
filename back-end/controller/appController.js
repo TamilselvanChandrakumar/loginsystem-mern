@@ -124,21 +124,89 @@ exports.getUser = async (req, res) => {
 };
 
 exports.updateUser = async (req, res) => {
-  res.json("updateUser route");
+  try {
+    // const id = req.query.id;
+    const { userId } = req.user;
+
+    if (userId) {
+      const body = req.body;
+
+      // update the data
+      userModel.updateOne({ _id: userId }, body, function (err, data) {
+        if (err) throw err;
+
+        return res.status(201).send({ msg: "Record Updated...!" });
+      });
+    } else {
+      return res.status(401).send({ error: "User Not Found...!" });
+    }
+  } catch (error) {
+    return res.status(401).send({ error });
+  }
 };
 
 exports.generateOtp = async (req, res) => {
-  res.json("generateOtp route");
+  req.app.locals.OTP = await otpGenerator.generate(6, {
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+  res.status(201).send({ code: req.app.locals.OTP });
 };
 
 exports.verifyOtp = async (req, res) => {
-  res.json("verifyOtp route");
+  const { code } = req.query;
+  if (parseInt(req.app.locals.OTP) === parseInt(code)) {
+    req.app.locals.OTP = null; // reset the OTP value
+    req.app.locals.resetSession = true; // start session for reset password
+    return res.status(201).send({ msg: "Verify Successsfully!" });
+  }
+  return res.status(400).send({ error: "Invalid OTP" });
 };
 
 exports.createResetSession = async (req, res) => {
-  res.json("createResetSession route");
+  if (req.app.locals.resetSession) {
+    return res.status(201).send({ flag: req.app.locals.resetSession });
+  }
+  return res.status(440).send({ error: "Session expired!" });
 };
 
 exports.resetPassword = async (req, res) => {
-  res.json("resetPassword route");
+  try {
+    if (!req.app.locals.resetSession)
+      return res.status(440).send({ error: "Session expired!" });
+
+    const { username, password } = req.body;
+
+    try {
+      UserModel.findOne({ username })
+        .then((user) => {
+          bcrypt
+            .hash(password, 10)
+            .then((hashedPassword) => {
+              UserModel.updateOne(
+                { username: user.username },
+                { password: hashedPassword },
+                function (err, data) {
+                  if (err) throw err;
+                  req.app.locals.resetSession = false; // reset session
+                  return res.status(201).send({ msg: "Record Updated...!" });
+                }
+              );
+            })
+            .catch((e) => {
+              return res.status(500).send({
+                error: "Enable to hashed password",
+              });
+            });
+        })
+        .catch((error) => {
+          return res.status(404).send({ error: "Username not Found" });
+        });
+    } catch (error) {
+      return res.status(500).send({ error });
+    }
+  } catch (error) {
+    return res.status(401).send({ error });
+  }
 };
