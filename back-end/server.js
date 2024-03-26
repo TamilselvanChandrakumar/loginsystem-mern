@@ -3,6 +3,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const router = require("./router/route.js");
+require("dotenv").config();
 const app = express();
 
 // middlewares
@@ -27,7 +28,10 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     app.listen(port, () => {
-      console.log("sever started on port", port);
+      console.log(
+        "data base conncetect successfully and server started on port",
+        port
+      );
     });
   })
   .catch((err) => {
